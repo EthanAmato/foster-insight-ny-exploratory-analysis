@@ -9,9 +9,9 @@
 
 ## Executive Summary
 
-This documentation covers 7 primary datasets containing information about foster care, crime, social services, economic indicators, and child welfare services across New York State. The datasets have been cleaned, standardized, and prepared for analysis to understand how environmental factors influence foster care outcomes.
+This documentation covers 8 primary datasets containing information about foster care, crime, social services, economic indicators, child welfare services, and population demographics across New York State. The datasets have been cleaned, standardized, and prepared for analysis to understand how environmental factors influence foster care outcomes.
 
-**Key Alignment Strategy**: County + Year as primary keys for joining datasets where possible, with district-to-county mapping for social services data.
+**Key Alignment Strategy**: County + Year as primary keys for joining datasets where possible, with district-to-county mapping for social services data. County population data enables per-capita normalization of all metrics.
 
 ---
 
@@ -26,6 +26,7 @@ This documentation covers 7 primary datasets containing information about foster
 | Public Assistance | 13,398 | 14 | 2006-2025 | 59 Districts | Economic distress indicator |
 | Social Services Staff | 1,178 | 21 | FY2005-2024 | 58 Districts | Service capacity indicator |
 | State Taxes | 1,626 | 5 | FY1995-2024 | Statewide | Economic context |
+| County Population | 3,843 | 6 | 1970-2024 | 62 Counties + State | Normalization/per-capita calculations |
 
 ---
 
@@ -237,6 +238,50 @@ Annual state tax and fee collections by category. Provides statewide economic co
 - **Granularity**: Annual data by tax type
 - **Aggregation Needed**: Tax categories for analysis
 - **Primary Keys**: Fiscal_Year_Ended + Tax_or_Fee
+
+---
+
+## 8. County Population Data
+**File**: `Annual_Population_Estimates_for_New_York_State_and_Counties__Beginning_1970_20251008.csv`
+
+### Description
+Annual population estimates for New York State and all counties from the New York State Department of Labor. This dataset is critical for normalizing all other metrics to per-capita rates, enabling fair comparisons across counties of different sizes.
+
+### Columns and Data Types
+| Column | Data Type | Description |
+|--------|-----------|-------------|
+| FIPS_Code | string | Federal Information Processing Standard code |
+| Geography | string | Original geography name (e.g., "Albany County", "New York State") |
+| Year | int64 | Calendar year of estimate |
+| Program_Type | string | Type of population estimate (Postcensal, Intercensal, Census Base) |
+| Population | int64 | Estimated population |
+| County | string | Standardized county name (cleaned, "Statewide" for state total) |
+
+### Key Characteristics
+- **Geographic Coverage**: All 62 New York counties plus statewide total (63 geographies)
+- **Temporal Coverage**: 1970-2024 (55 years)
+- **Granularity**: Annual data by county
+- **Data Cleaning Applied**: 
+  - Extracted county names by removing " County" suffix
+  - Created standardized "County" column for easier joining
+  - Marked statewide rows as "Statewide" for filtering
+- **Primary Keys**: County + Year (or Geography + Year for statewide data)
+- **Program Types**:
+  - **Postcensal**: Estimates for years after the most recent census
+  - **Intercensal**: Revised estimates between two censuses
+  - **Census Base**: Official census counts
+
+### Usage Examples
+1. **Per-Capita Foster Care Rate**: `Children_In_Care / Population * 1000`
+2. **Crime Rate**: `Index_Total / Population * 100000`
+3. **Social Services Coverage**: `Total_Staffing / Population * 10000`
+4. **Health Insurance Coverage**: `Number_of_Enrollees / Population * 100`
+
+### Important Notes
+- Population estimates enable fair comparison between large counties (e.g., Kings County with 2.6M people) and small counties (e.g., Hamilton County with 5K people)
+- The dataset includes both county-level and statewide totals; filter by `County != 'Statewide'` for county-only analysis
+- Excellent temporal coverage (1970-2024) supports historical trend analysis
+- Aligns perfectly with other county-level datasets using County + Year keys
 
 ---
 
